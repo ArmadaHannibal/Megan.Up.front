@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { fetchAttemptDetail } from "../services/api";
-import AttemptReview from "./Attemptreview";
+import AttemptReview from "./AttemptReview";
 
 const DIFFICULTY_LABELS = { 1: "Débutant", 2: "Intermédiaire", 3: "Avancé" };
 
