@@ -52,6 +52,7 @@ export default function App() {
   const [selectedAttemptId, setSelectedAttemptId] = useState(null);
 
   const [user, setUser] = useState(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
 
   // Au chargement : si un jeton est déjà stocké, on le valide auprès de l'API.
@@ -69,6 +70,16 @@ export default function App() {
   function handleLogout() {
     logout();
     setUser(null);
+    setIsGuest(false);
+    setScreen("home");
+    setLastResult(null);
+    setSelectedAttemptId(null);
+  }
+
+  // Un invité qui souhaite finalement se connecter revient à l'écran d'auth ;
+  // aucune session à effacer puisqu'un invité n'a jamais eu de jeton.
+  function handleGoToLogin() {
+    setIsGuest(false);
     setScreen("home");
     setLastResult(null);
     setSelectedAttemptId(null);
@@ -93,7 +104,7 @@ export default function App() {
 
   return (
     <div
-      className={`relative ${screen === "result" ? "h-auto" : "h-[60rem]"} md:min-h-screen md:h-full ${user ? "bg-[url('https://res.cloudinary.com/tnqx0erv/image/upload/v1789899183/ChatGPT_Image_20_sept._2026_12_12_20.png')] bg-size-[55%] bg-no-repeat bg-bottom-right" : "bg-[url('https://res.cloudinary.com/tnqx0erv/image/upload/v1789896760/ChatGPT_Image_19_sept._2026_23_21_15.webp')] bg-cover bg-center bg-no-repeat"}`}
+      className={`relative ${screen === "result" ? "h-auto" : "h-[60rem]"} md:min-h-screen md:h-full ${user || isGuest ? "bg-[url('https://res.cloudinary.com/tnqx0erv/image/upload/v1789899183/ChatGPT_Image_20_sept._2026_12_12_20.png')] bg-size-[55%] bg-no-repeat bg-bottom-right" : "bg-[url('https://res.cloudinary.com/tnqx0erv/image/upload/v1789896760/ChatGPT_Image_19_sept._2026_23_21_15.webp')] bg-cover bg-center bg-no-repeat"}`}
     >
       <header className="px-4 py-4">
         <div className="mx-auto flex max-w-2xl items-center justify-between p-3">
@@ -230,13 +241,60 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {isGuest && (
+            <div className="fixed z-20 top-[93%] md:top-auto md:bottom-6 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-0 flex items-center gap-4">
+              <div className="liquid-ice p-2.5 px-6 rounded-full">
+                <ul className="flex items-center gap-3">
+                  {screen !== "home" && screen !== "quiz" && (
+                    <li>
+                      <Tooltip delay={0}>
+                        <Button
+                          isIconOnly
+                          aria-label="Accueil"
+                          onClick={() => setScreen("home")}
+                          variant="tertiary"
+                        >
+                          <FaHome />
+                        </Button>
+                        <Tooltip.Content showArrow placement="top">
+                          <Tooltip.Arrow />
+                          <p>Accueil</p>
+                        </Tooltip.Content>
+                      </Tooltip>
+                    </li>
+                  )}
+                  <li>
+                    <Tooltip delay={0}>
+                      <Button
+                        aria-label="Se connecter"
+                        onClick={handleGoToLogin}
+                        variant="secondary"
+                      >
+                        Se connecter
+                      </Button>
+                      <Tooltip.Content showArrow placement="top">
+                        <Tooltip.Arrow />
+                        <p>
+                          Créez un compte pour sauvegarder votre score et
+                          accéder à votre historique
+                        </p>
+                      </Tooltip.Content>
+                    </Tooltip>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       <main>
-        {!user && <AuthForm onAuthenticated={setUser} />}
+        {!user && !isGuest && (
+          <AuthForm onAuthenticated={setUser} onGuest={() => setIsGuest(true)} />
+        )}
 
-        {user && screen === "home" && (
+        {(user || isGuest) && screen === "home" && (
           <div className="mx-auto max-w-2xl px-4 py-10">
             <h2 className="archivo-black-regular text-4xl">
               Bienvenue sur QCM · Management d'artistes
@@ -314,7 +372,7 @@ export default function App() {
           </div>
         )}
 
-        {user && screen === "quiz" && (
+        {(user || isGuest) && screen === "quiz" && (
           <QuizComponent
             difficulty={difficulty}
             questionCount={10}
@@ -327,11 +385,25 @@ export default function App() {
           />
         )}
 
-        {user && screen === "result" && lastResult && (
-          <ReviewComponent
-            result={lastResult}
-            onBack={() => setScreen("home")}
-          />
+        {(user || isGuest) && screen === "result" && lastResult && (
+          <>
+            {isGuest && (
+              <p className="mx-auto max-w-2xl px-4 pt-6 text-center text-sm text-zinc-400">
+                Résultat non enregistré (mode invité) —{" "}
+                <button
+                  onClick={handleGoToLogin}
+                  className="cursor-pointer text-amber-400 underline hover:text-amber-300"
+                >
+                  connectez-vous
+                </button>{" "}
+                pour garder votre historique.
+              </p>
+            )}
+            <ReviewComponent
+              result={lastResult}
+              onBack={() => setScreen("home")}
+            />
+          </>
         )}
 
         {user && screen === "history" && (

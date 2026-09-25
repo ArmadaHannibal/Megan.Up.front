@@ -7,7 +7,7 @@ import { login, register } from "../services/api";
  * Props :
  *  - onAuthenticated: (user) => void
  */
-export default function AuthForm({ onAuthenticated }) {
+export default function AuthForm({ onAuthenticated, onGuest }) {
   const [mode, setMode] = useState("login"); // "login" | "register"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -150,6 +150,29 @@ export default function AuthForm({ onAuthenticated }) {
             ? "J'ai déjà un compte me connecter"
             : "Pas encore de compte ? En créer un"}
         </button>
+
+        {onGuest && (
+          <>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-zinc-800" />
+              <span className="text-xs uppercase tracking-wide text-zinc-600">
+                ou
+              </span>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+
+            <button
+              onClick={onGuest}
+              className="w-full cursor-pointer rounded-lg border border-zinc-700 px-6 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800"
+            >
+              Jouer sans créer de compte
+            </button>
+            <p className="mt-2 text-center text-xs text-zinc-500">
+              En mode invité, votre score n'est pas enregistré et
+              l'historique des tentatives n'est pas disponible.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
